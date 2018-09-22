@@ -17,8 +17,8 @@ endmacro()
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 
 add_executable(Vision main.cpp)
+file(COPY red2.txt green2.txt angles2.txt DESTINATION ./)
 
-target_link_libraries(CycloneVision
-        jpeg
+target_link_libraries(Vision
         ${OpenCV_LIBS}
         )
