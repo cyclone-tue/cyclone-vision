@@ -22,9 +22,9 @@ int dilation_type = 0;
 double est = 0;
 double a = 0;
 int n = 0;
-string red = "/Users/Bouda/Desktop/TUEindhoven/Cyclone/red2.txt"; //the text files containing the thresholding data
+string red = "./red2.txt"; //the text files containing the thresholding data
 //string blue = "/Users/Bouda/Desktop/TUEindhoven/Cyclone/blue2.txt";
-string green = "/Users/Bouda/Desktop/TUEindhoven/Cyclone/green2.txt";
+string green = "./green2.txt";
 vector<RotatedRect> finalEllipse(1); //detected ellipse is stored here
 VectorXd coef_vec2(6);
 
@@ -232,7 +232,7 @@ Mat removeBG(Mat& input, Mat& frame) {
     Mat junk;
     string line;
     ifstream myfile;
-    myfile.open("/Users/Bouda/Desktop/TUEindhoven/Cyclone/junk.txt"); //threshold values loaded from a text file
+    myfile.open("./red2.txt"); //threshold values loaded from a text file
     if (myfile.is_open()) {
         getline (myfile,line);
         low_v = atoi(line.c_str());
@@ -250,7 +250,7 @@ Mat removeBG(Mat& input, Mat& frame) {
         myfile.close();
     }
 
-    else cout << "Unable to open file";
+    else cout << "Unable to open file" << endl;
 
     inRange(frame,Scalar(low_v, low_s, low_h), Scalar(high_v, high_s, high_h),junk);
 
@@ -321,7 +321,7 @@ Mat threshold(Mat& input, string file) {
         myfile.close();
     }
 
-    else cout << "Unable to open file";
+    else cout << "Unable to open file" << endl;
     cv::cvtColor( input, output, cv::COLOR_BGR2HSV );
     //thresholding command
     inRange(input,Scalar(low_h, low_s, low_v), Scalar(high_h, high_s, high_v),output);
@@ -468,7 +468,7 @@ void record_values(){
 
 void angles(){
     ofstream file;
-    file.open("/Users/Bouda/Desktop/TUEindhoven/Cyclone/angles2.txt", ios::out);
+    file.open("./angles2.txt", ios::out);
     file <<"measured "<< dist_meas << " " << angle_ver << " " << angle_hor << "\n";
     file <<"ellipse par " << finalEllipse[1].size.height<< " " << finalEllipse[1].size.width << "\n";
     file <<"\n";
@@ -490,7 +490,7 @@ MatrixXd executeVision() {
     //            videoconvert ! video/x-raw, format=(string)BGR ! \
     //            appsink";
 
-    VideoCapture cap("./video2.mp4");
+    VideoCapture cap(0);
     //    VideoCapture cap(1);
     //
     //    cap.set(CV_CAP_PROP_FRAME_WIDTH,640);
