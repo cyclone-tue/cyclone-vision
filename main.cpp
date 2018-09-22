@@ -13,6 +13,7 @@ using Eigen::VectorXd;
 
 using namespace std;
 using namespace cv;
+using namespace Eigen;
 
 #define PI 3.14159265
 
@@ -59,7 +60,7 @@ void full_pos();
 void position_calculation();
 void angles();
 MatrixXd executeVision();
-void executePathPlanner(double orientation);
+MatrixXd executePathPlanner(double orientation);
 vector<vector<Point> > contouring(Mat& input);
 
 Mat threshold(Mat& input, string file);
@@ -73,7 +74,7 @@ Mat removeBG(Mat& input, Mat& frame);
 MatrixXd equations_f(MatrixXd M_used, VectorXd cond_vec, int j) {
     MatrixXd M_u(6, 6);
     M_u = M_used;
-    VectorXd cond_(v6);
+    VectorXd cond_v;
     cond_v = cond_vec;
 
     //std::cout << "Here is the matrix A:\n" << M_u << std::endl;
@@ -489,7 +490,7 @@ MatrixXd executeVision() {
     //            videoconvert ! video/x-raw, format=(string)BGR ! \
     //            appsink";
 
-    VideoCapture cap("/Users/Bouda/Desktop/video3.avi");
+    VideoCapture cap("./video2.mp4");
     //    VideoCapture cap(1);
     //
     //    cap.set(CV_CAP_PROP_FRAME_WIDTH,640);
@@ -610,61 +611,93 @@ MatrixXd executeVision() {
     return estimatedHoopPos;
 }
 
-void executePathPlanner() {
-    Matrix3d init = Matrix3d::Zero();
-    MatrixXd R(3,3);
-    MatrixXd dist_corr_in(3,1);
-    MatrixXd vel_corr_in(3,1);
-    MatrixXd dist_corr_fin(3,1);
-    MatrixXd vel_corr_fin(3,1);
+MatrixXd executePathPlanner() {
+     Matrix3d init = Matrix3d::Zero();
+    MatrixXd R(3, 3);
+    MatrixXd dist_corr_in(3, 1);
+    MatrixXd vel_corr_in(3, 1);
+    MatrixXd dist_corr_fin(3, 1);
+    MatrixXd vel_corr_fin(3, 1);
 
-    MatrixXd distanceBeforeHoop(3,1);
-    MatrixXd velocityBeforeHoop(3,1);
-    MatrixXd distanceAfterHoop(3,1);
-    MatrixXd velocityAfterHoop(3,1);
-    MatrixXd hoop_state(1,3);
+    MatrixXd distanceBeforeHoop(3, 1);
+    MatrixXd velocityBeforeHoop(3, 1);
+    MatrixXd distanceAfterHoop(3, 1);
+    MatrixXd velocityAfterHoop(3, 1);
+    MatrixXd hoop_state(1, 3);
     double orientation;
 
     distanceAfterHoop << 0, d_after, 0;
     velocityAfterHoop << 0, v_after, 0;
-    MatrixXd hoop_pos(1,3);
+    MatrixXd hoop_pos(1, 3);
     hoop_state = executeVision();
-    orientation = hoop_state.coeff(0,3) * M_PI/180;
+    orientation = hoop_state.coeff(0, 3) * M_PI / 180;
     //orientation = 30*M_PI/180;
-    //hoop_pos << 1,2,3;
-    hoop_pos = hoop_state.block<1,3>(0,0);
-    distanceBeforeHoop << 0, d_before, 0;
-    velocityBeforeHoop << 0, v_in, 0;
+    //hoop_pos << 3,4,5;
+    hoop_pos = hoop_state.block<1, 3>(0, 0);
+    std::cout << hoop_pos << std::endl;
 
-    R << cos(orientation), sin(orientation), 0, -sin(orientation), cos(orientation), 0, 0, 0, 1;
-    dist_corr_in = R * distanceBeforeHoop;
-    vel_corr_in = R * velocityBeforeHoop;
-    dist_corr_fin = R * distanceAfterHoop;
-    vel_corr_fin = R * velocityAfterHoop;
+    double ppX = hoop_pos(0, 2);
+    double ppY = hoop_pos(0, 1);
+    double ppZ = hoop_pos(0, 0);
 
-    MatrixXd p_before_hoop(2, 3);
-    MatrixXd p_before_hoop1(1,3);
-    MatrixXd p_before_hoop2(1,3);
+    if((ppX == 0 && ppY == 0 && ppZ == 0) || (ppX == 0.0 && ppY == 0.0 && ppZ == 0.0)){
+        MatrixXd r = MatrixXd(12, 100);
+        r.setZero();
+        return r;
+    } else {
+        hoop_pos(0, 0) = ppX; //x
+        hoop_pos(0, 1) = ppY; //y
+        hoop_pos(0, 2) = ppZ; //z
+        std::cout << hoop_pos << std::endl;
+        distanceBeforeHoop << 0, d_before, 0;
+        velocityBeforeHoop << 0, v_in, 0;
 
-    p_before_hoop1 << hoop_pos - dist_corr_in.transpose();
-    p_before_hoop2 << vel_corr_in.transpose();
-    p_before_hoop << p_before_hoop1 , p_before_hoop2;
+        R << cos(orientation), sin(orientation), 0, -sin(orientation), cos(orientation), 0, 0, 0, 1;
+        dist_corr_in = R * distanceBeforeHoop;
+        vel_corr_in = R * velocityBeforeHoop;
+        dist_corr_fin = R * distanceAfterHoop;
+        vel_corr_fin = R * velocityAfterHoop;
 
-    MatrixXd final(3, 3);
-    MatrixXd final1(1, 3);
-    MatrixXd final2(1, 3);
-    final1 << hoop_pos + dist_corr_fin.transpose();
-    final2 << vel_corr_fin.transpose();
-    final << final1, final2, 0, 0, 0;
+        MatrixXd p_before_hoop(2, 3);
+        MatrixXd p_before_hoop1(1, 3);
+        MatrixXd p_before_hoop2(1, 3);
 
-    double yaw0 = 0;
-    double hoop_orient = orientation;
-    MatrixXd r = Dimention3(init, p_before_hoop, final, hoop_pos, yaw0, hoop_orient);
-    std::cout << r << std::endl;
+        p_before_hoop1 << hoop_pos - dist_corr_in.transpose();
+        p_before_hoop2 << vel_corr_in.transpose();
+        p_before_hoop << p_before_hoop1, p_before_hoop2;
+
+        MatrixXd final(3, 3);
+        MatrixXd final1(1, 3);
+        MatrixXd final2(1, 3);
+        final1 << hoop_pos + dist_corr_fin.transpose();
+        final2 << vel_corr_fin.transpose();
+        final << final1, final2, 0, 0, 0;
+
+        double yaw0 = 0;
+        double hoop_orient = orientation;
+        MatrixXd r = Dimention3(init, p_before_hoop, final, hoop_pos, yaw0, hoop_orient);
+        return r;
+      }
 }
 
 int main() {
     executePathPlanner(); //no idea what the orientation should be rn.
+}
+
+double* MatrixConversion(MatrixXd m) {
+    static double db_array[100][12];
+//    cout << "Path is: " << endl;
+//    cout <<  m  << endl;
+    Map<MatrixXd>(&db_array[0][0], m.rows(), m.cols()) = m;
+    return &db_array[0][0];
+}
+
+extern "C" {
+    double* output_to_py(MatrixXd m){
+        static double* db_p;
+        db_p = MatrixConversion(executePathPlanner().transpose());
+        return db_p;
+    }
 }
 
 //    VideoCapture cap(1); // open the default camera
