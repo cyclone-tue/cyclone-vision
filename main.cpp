@@ -490,7 +490,7 @@ MatrixXd executeVision() {
     //            videoconvert ! video/x-raw, format=(string)BGR ! \
     //            appsink";
 
-    VideoCapture cap(0);
+    VideoCapture cap("video2.mp4");
     //    VideoCapture cap(1);
     //
     //    cap.set(CV_CAP_PROP_FRAME_WIDTH,640);
@@ -533,7 +533,13 @@ MatrixXd executeVision() {
         kernel = Mat::ones( kernel_size, kernel_size, CV_32F )/ (float)(kernel_size*kernel_size);
 
         cap >> frame; //passing the captured frame onto a Mat object
+        if(frame.size.dims() == 0){
+            break;
+        }
+
         filter2D(frame, frame,-1,kernel, Point(-1,-1), 0, BORDER_DEFAULT);
+
+
         imshow("Frame", frame);
         //        double fps = cap.get(CV_CAP_PROP_FPS);
         //        cout << "fps: " << fps << endl;
@@ -634,7 +640,7 @@ MatrixXd executePathPlanner() {
     //orientation = 30*M_PI/180;
     //hoop_pos << 3,4,5;
     hoop_pos = hoop_state.block<1, 3>(0, 0);
-    std::cout << hoop_pos << std::endl;
+    std::cout << "Hoop position: " << hoop_pos << std::endl;
 
     double ppX = hoop_pos(0, 2);
     double ppY = hoop_pos(0, 1);
@@ -648,7 +654,7 @@ MatrixXd executePathPlanner() {
         hoop_pos(0, 0) = ppX; //x
         hoop_pos(0, 1) = ppY; //y
         hoop_pos(0, 2) = ppZ; //z
-        std::cout << hoop_pos << std::endl;
+        std::cout << "Hoop x, y, z: " << hoop_pos << std::endl;
         distanceBeforeHoop << 0, d_before, 0;
         velocityBeforeHoop << 0, v_in, 0;
 
@@ -657,6 +663,7 @@ MatrixXd executePathPlanner() {
         vel_corr_in = R * velocityBeforeHoop;
         dist_corr_fin = R * distanceAfterHoop;
         vel_corr_fin = R * velocityAfterHoop;
+        std::cout << "Calcutated corrected distances and velocities." << endl;
 
         MatrixXd p_before_hoop(2, 3);
         MatrixXd p_before_hoop1(1, 3);
@@ -681,7 +688,9 @@ MatrixXd executePathPlanner() {
 }
 
 int main() {
-    executePathPlanner(); //no idea what the orientation should be rn.
+    MatrixXd path = executePathPlanner(); //no idea what the orientation should be rn.
+    std::cout << "Path planner executed sucessfully" <<endl;
+    return 0;
 }
 
 double* MatrixConversion(MatrixXd m) {

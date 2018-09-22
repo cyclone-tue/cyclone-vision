@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(Vision)
 
 SET(CMAKE_MODULE_PATH /usr/local/lib/cmake)
+SET(CMAKE_BUILD_TYPE RelWithDebInfo)
 include_directories(/usr/local/lib)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
