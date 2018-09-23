@@ -256,9 +256,9 @@ Mat removeBG(Mat& input, Mat& frame) {
 
     junk = dilation(junk, 2, 2);
 
-    for(int y=0; y<=input.size().height; y++)
+    for(int y=0; y < input.size().height; y++)
     {
-        for(int x = 0; x <= input.size().width; x++)
+        for(int x = 0; x < input.size().width; x++)
         {
             if (input.at<uchar>(y,x) == 255 && junk.at<uchar>(y,x) == 255) {
                 input.at<uchar>(y,x) = 0;
@@ -360,8 +360,8 @@ Mat combinedEllipse3(vector<vector<Point> >& input, Mat& t) {
             //Only those ellipses are saved, which had a contour area reasonably                     close to the estimated ellipse area. This makes sure, that the                     detected shape was indeed an ellipse. (This can be done as the dilation kernel shape was an ellipse.)
             if ( est < 5) {
                 //center position of the LEDs are saved to an array
-                coordinate.x = minEllipse[i].center.x;
-                coordinate.y = minEllipse[i].center.y;
+                coordinate.x = (int)round(minEllipse[i].center.x);
+                coordinate.y = (int)round(minEllipse[i].center.y);
                 bigEllipse.push_back(coordinate);
             }
         }
@@ -523,8 +523,6 @@ MatrixXd executeVision() {
     namedWindow("Without BG", CV_WINDOW_AUTOSIZE);
     //createTrackbar( " Drone rotation ", "Trackbar", &delta, 360, contours_trackbar); //simulaion
     //createTrackbar( " Drone altitude ", "Trackbar", &h_bar, 500, contours_trackbar);
-
-    std::cout << "got here" << endl;
 
     while (count < 500) {
         Mat frame;
